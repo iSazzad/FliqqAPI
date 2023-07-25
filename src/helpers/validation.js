@@ -10,6 +10,8 @@ exports.alphabetCollectioValidation = [
         'image/svg+xml',
         'image/png',
         'image/gif',
+        'audio/mp3',
+        'audio/mpeg',
       ]
       if (req.files && allowedMimeTypes.includes(req.files[0].mimetype)) {
         return true

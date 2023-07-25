@@ -46,13 +46,20 @@ const fileFilter = (req, file, cb) => {
   file.mimetype === 'image/jpg' ||
   file.mimetype === 'image/svg+xml' ||
   file.mimetype === 'image/png' ||
-  file.mimetype === 'image/gif'
+  file.mimetype === 'image/gif' ||
+  file.mimetype === 'audio/mpeg' ||
+  file.mimetype === 'audio/mp3'
     ? cb(null, true)
     : cb(null, false)
 }
 const upload = multer({ storage: storageFile, fileFilter: fileFilter })
 // add alphabets in collection
-router.post('/alphabets', upload.any('file'), alphabetData, addAlphabetData)
+router.post(
+  '/alphabets-data',
+  upload.any('file'),
+  alphabetData,
+  addAlphabetData
+)
 
 router.post('/google-login', googleAuthentication)
 
