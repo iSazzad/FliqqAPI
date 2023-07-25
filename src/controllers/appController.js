@@ -3,7 +3,7 @@ const Alphabet = require('../models/alphabets')
 const Users = require('../models/users')
 const jwt = require('jsonwebtoken')
 const AlphabetCollectionModel = require('../models/AlphabetCollectionModel')
-const alphabetsSvgArray = require('./commonController')
+const { alphabetsSvgArray, statusMessage } = require('./commonController')
 const appleSignin = require('apple-signin-auth')
 const { validationResult } = require('express-validator')
 const users = []
@@ -355,17 +355,14 @@ const alphabetlist = async (req, res) => {
       }))
       arrList.push({ ...element, data: newDataArr })
     }
-
-    return res.status(200).json({
-      message: 'data get successfully',
-      data: { data: arrList },
-    })
+    await statusMessage(res, 200, 'data get successfully', arrList)
+    // return res.status(200).json({
+    //   message: 'data get successfully',
+    //   data: { data: arrList },
+    // })
   } catch (error) {
     console.error('error-->', error)
-    return res.status(500).json({
-      message: 'An error occurred',
-      data: [],
-    })
+    await statusMessage(res, 500, 'Error while fetching data', [])
   }
 }
 
@@ -415,7 +412,13 @@ const updateAlpabets = async (req, res) => {
     })
   }
 }
-
+const userLogin = async (req, res) => {
+  try {
+    console.log('req==>', req.body)
+  } catch (error) {
+    console.log('err--->', error)
+  }
+}
 module.exports = {
   googleAuthentication,
   addAlphabetData,
@@ -425,4 +428,5 @@ module.exports = {
   alphabetlist,
   updateAlpabets,
   appleAuthentication,
+  userLogin,
 }

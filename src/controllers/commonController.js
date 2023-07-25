@@ -25,4 +25,18 @@ const alphabetsSvgArray = async () => {
   })
 }
 
-module.exports = alphabetsSvgArray
+const statusMessage = (res, statusCode, message, data) => {
+  return new Promise((resolve, reject) => {
+    res.status(statusCode)
+    const response = { message }
+    if (data) {
+      response.data = { data: data }
+    }
+    resolve(res.json(response))
+  })
+}
+
+module.exports = {
+  alphabetsSvgArray,
+  statusMessage,
+}
