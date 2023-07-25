@@ -207,8 +207,108 @@ const addAlphabetData = async (req, res) => {
     })
   }
 }
+const addAlphabetDetails = async (req, res) => {
+  console.log('addAlphabetDetails')
+  try {
+    console.log('addAlphabetData req-->', req.body)
+    const body = {
+      alpha_character: req.body.alpha_character,
+      name: req.body.name,
+    }
+    // Validate the request using validationResult
+    const errors = validationResult(req)
+    console.log('errors-->', errors)
+    if (!errors.isEmpty()) {
+      return res.status(403).json({ errors: errors.array() })
+    }
 
+    if (req.files && req.files.length > 0) {
+      // Assuming that req.files is an array of files
+      req.files.forEach(element => {
+        if (
+          element.mimetype === 'audio/mpeg' ||
+          element.mimetype === 'audio/mp4' ||
+          element.mimetype === 'audio/x-aiff'
+        ) {
+          body['voice_url'] = {
+            path: element.path,
+            originalName: element.originalname,
+            name: element.filename,
+            destination: element.destination,
+          }
+        } else {
+          body['image_url'] = {
+            path: element.path,
+            originalName: element.originalname,
+            name: element.filename,
+            destination: element.destination,
+          }
+        }
+      })
+    }
+
+    const dataExist = await Alphabet.findOne({
+      $and: [
+        { alpha_character: req.body.alpha_character },
+        { name: req.body.name },
+      ],
+    })
+    console.log('dataExist-->', dataExist, body)
+    if (dataExist) {
+      return res.status(400).json({
+        message: 'This Name Already Exists',
+        data: {},
+      })
+    }
+
+    const addingAlphabets = new Alphabet(body)
+    const insertValues = await addingAlphabets.save()
+    console.log('add alphabets data-->', insertValues)
+    return res.status(201).json({
+      message: 'Data added successfully',
+      data: { data: insertValues },
+    })
+  } catch (error) {
+    console.error('Error:', error)
+    return res.status(500).json({
+      message: 'Error while adding data',
+      error: error.message,
+    })
+  }
+}
 const login = async (req, res) => {
+  try {
+    const email = req.body.email
+    console.log('req login--->', req.body, process.env.ADMIN_PASSWORD)
+    const userFind = await Users.findOne({
+      email: email,
+    })
+    console.log('userFind login--->', userFind)
+
+    if (req.body.password !== process.env.ADMIN_PASSWORD) {
+      return res.status(400).json({
+        message: 'Invalid password',
+      })
+    }
+    if (userFind === undefined || userFind === null) {
+      return res.status(404).json({
+        message: 'Data not found',
+      })
+    }
+    return res.status(200).json({
+      message: 'login successfully',
+      data: { data: userFind },
+    })
+  } catch (e) {
+    console.log('e-->', e)
+    return res.status(400).json({
+      message: 'invalid login',
+      error: e,
+    })
+  }
+}
+const loginUser = async (req, res) => {
+  console.log('loginUser')
   try {
     const email = req.body.email
     console.log('req login--->', req.body, process.env.ADMIN_PASSWORD)
@@ -424,4 +524,6 @@ module.exports = {
   alphabetlist,
   updateAlpabets,
   appleAuthentication,
+  loginUser,
+  addAlphabetDetails,
 }

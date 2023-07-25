@@ -10,11 +10,13 @@ const {
   updateAlpabets,
   addAlphabets,
   appleAuthentication,
+  loginUser,
+  addAlphabetDetails,
 } = require('../controllers/appController')
 const multer = require('multer')
 const {
   alphabetCollectioValidation,
-  alphabetData,
+  alphabetDataValidation,
 } = require('../helpers/validation')
 
 router.use(cookieParser())
@@ -57,7 +59,7 @@ const upload = multer({ storage: storageFile, fileFilter: fileFilter })
 router.post(
   '/alphabets-data',
   upload.any('file'),
-  alphabetData,
+  alphabetDataValidation,
   addAlphabetData
 )
 
@@ -75,5 +77,12 @@ router.post(
 router.get('/alphabets-list', alphabetlist)
 router.patch('/update-alphabets-data/:id', upload.any('file'), updateAlpabets)
 router.post('/apple-login', appleAuthentication)
+router.post('/login-api', loginUser)
+router.post(
+  '/alphabets-details',
+  upload.any('file'),
+  alphabetDataValidation,
+  addAlphabetDetails
+)
 
 module.exports = router

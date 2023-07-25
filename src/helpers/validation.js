@@ -23,7 +23,7 @@ exports.alphabetCollectioValidation = [
     ),
 ]
 
-exports.alphabetData = [
+exports.alphabetDataValidation = [
   check('name').notEmpty().withMessage('name is required'),
   check('alpha_character')
     .notEmpty()
