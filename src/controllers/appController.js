@@ -138,77 +138,17 @@ const appleAuthentication = async (req, res) => {
     })
   }
 }
-// const addAlphabetData = async (req, res) => {
-//   try {
-//     let body = {
-//       alpha_character: req.body.alpha_character,
-//       name: req.body.name,
-//     }
-//     const errors = validationResult(req)
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({ errors: errors.array() })
-//     }
-//     if (req.files) {
-//       const fl = req.files
-//       fl.forEach(element => {
-//         if (
-//           element.mimetype === 'audio/mpeg' ||
-//           element.mimetype === 'audio/mp4' ||
-//           element.mimetype === 'audio/x-aiff'
-//         ) {
-//           body['voice_url'] = {
-//             path: element.path,
-//             originalName: element.originalname,
-//             name: element.filename,
-//             destination: element.destination,
-//           }
-//         } else {
-//           body['image_url'] = {
-//             path: element.path,
-//             originalName: element.originalname,
-//             name: element.filename,
-//             destination: element.destination,
-//           }
-//         }
-//       })
-//     }
-//     const addingAlphabets = new Alphabet(body)
-//     const dataExist = await Alphabet.findOne({
-//       $and: [
-//         { alpha_character: req.body.alpha_character },
-//         { name: req.body.name },
-//       ],
-//     })
-//     if (dataExist) {
-//       return res.status(400).json({
-//         message: 'This Name Already Exist',
-//         data: {},
-//       })
-//     }
-//     const insertValues = await addingAlphabets.save()
-//     return res.status(201).json({
-//       data: { data: insertValues },
-//       message: 'data added successfully',
-//     })
-//   } catch (e) {
-//     console.log('e-->', e)
-//     return res.status(400).json({
-//       message: 'Error while add data',
-//       error: e,
-//     })
-//   }
-// }
+
 const addAlphabetData = async (req, res) => {
   try {
     const body = {
       alpha_character: req.body.alpha_character,
       name: req.body.name,
     }
-
     // Validate the request using validationResult
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() })
+      return res.status(403).json({ errors: errors.array() })
     }
 
     if (req.files && req.files.length > 0) {
@@ -252,7 +192,7 @@ const addAlphabetData = async (req, res) => {
 
     const addingAlphabets = new Alphabet(body)
     const insertValues = await addingAlphabets.save()
-
+    console.log('add alphabets data-->', insertValues, body, dataExist)
     return res.status(201).json({
       message: 'Data added successfully',
       data: { data: insertValues },
@@ -282,6 +222,7 @@ const login = async (req, res) => {
         message: 'Data not found',
       })
     }
+    console.log('login-->', req.body, userFind, process.env.ADMIN_PASSWORD)
     return res.status(200).json({
       message: 'login successfully',
       data: { data: userFind },
@@ -322,9 +263,8 @@ const addAlphabets = async (req, res) => {
     const body = { alpha_character, color_code }
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() })
+      return res.status(403).json({ errors: errors.array() })
     }
-    console.log('req files-->', req.files)
     if (req.files) {
       req.files.forEach(element => {
         const { mimetype, path, originalname, filename, destination } = element
@@ -388,7 +328,6 @@ const addAlphabets = async (req, res) => {
 const alphabetlist = async (req, res) => {
   try {
     const alphabetArray = await alphabetsSvgArray()
-    console.log('alphabetArray-->', alphabetArray)
     if (!Array.isArray(alphabetArray) || alphabetArray.length === 0) {
       return res.status(404).json({
         message: 'data not found',
