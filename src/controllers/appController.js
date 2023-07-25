@@ -141,12 +141,14 @@ const appleAuthentication = async (req, res) => {
 
 const addAlphabetData = async (req, res) => {
   try {
+    console.log('addAlphabetData req-->', req.body)
     const body = {
       alpha_character: req.body.alpha_character,
       name: req.body.name,
     }
     // Validate the request using validationResult
     const errors = validationResult(req)
+    console.log('errors-->', errors)
     if (!errors.isEmpty()) {
       return res.status(403).json({ errors: errors.array() })
     }
@@ -182,7 +184,7 @@ const addAlphabetData = async (req, res) => {
         { name: req.body.name },
       ],
     })
-
+    console.log('dataExist-->', dataExist, body)
     if (dataExist) {
       return res.status(400).json({
         message: 'This Name Already Exists',
@@ -192,7 +194,7 @@ const addAlphabetData = async (req, res) => {
 
     const addingAlphabets = new Alphabet(body)
     const insertValues = await addingAlphabets.save()
-    console.log('add alphabets data-->', insertValues, body, dataExist)
+    console.log('add alphabets data-->', insertValues)
     return res.status(201).json({
       message: 'Data added successfully',
       data: { data: insertValues },
@@ -209,9 +211,12 @@ const addAlphabetData = async (req, res) => {
 const login = async (req, res) => {
   try {
     const email = req.body.email
+    console.log('req login--->', req.body, process.env.ADMIN_PASSWORD)
     const userFind = await Users.findOne({
       email: email,
     })
+    console.log('userFind login--->', userFind)
+
     if (req.body.password !== process.env.ADMIN_PASSWORD) {
       return res.status(400).json({
         message: 'Invalid password',
@@ -222,7 +227,6 @@ const login = async (req, res) => {
         message: 'Data not found',
       })
     }
-    console.log('login-->', req.body, userFind, process.env.ADMIN_PASSWORD)
     return res.status(200).json({
       message: 'login successfully',
       data: { data: userFind },
@@ -238,6 +242,7 @@ const login = async (req, res) => {
 const getAlphabetData = async (req, res) => {
   try {
     const data = await Alphabet.find({})
+    console.log('getAlphabetData', data.length)
     if (data.length > 0) {
       return res.status(200).json({
         message: 'Data retrieved successfully',
