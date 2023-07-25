@@ -1,9 +1,11 @@
-const { OAuth2Client } = require('google-auth-library')
+const { OAuth2Client, JWT } = require('google-auth-library')
 const Alphabet = require('../models/alphabets')
 const Users = require('../models/users')
 const jwt = require('jsonwebtoken')
-const SvgModel = require('../models/svgModel')
+const AlphabetCollectionModel = require('../models/AlphabetCollectionModel')
 const alphabetsSvgArray = require('./commonController')
+const appleSignin = require('apple-signin-auth')
+const { validationResult } = require('express-validator')
 const users = []
 const client = new OAuth2Client([
   '151836319995-ec3t6nq6hm1rjkq1v6c9b4vn6uurl6sf.apps.googleusercontent.com',
@@ -86,11 +88,77 @@ const googleAuthentication = async (req, res) => {
     })
   }
 }
+const appleAuthentication = async (req, res) => {
+  try {
+    const data = await appleSignin.verifyIdToken(req.body.idToken, {
+      audience: '',
+      ignoreExpiration: true,
+    })
+    if (data && data.email) {
+      // Prepare object to get user details
+      const conditions = {
+        isDeleted: false,
+        email: `${data.email}`,
+        userType: 'apple',
+      }
+      // Get user detail
+      let user = await Users.findOne(
+        conditions,
+        'firstName lastName email profileImageUrl userType'
+      )
+      if (user === undefined || user === null) {
+        user = await db.models.users.create({
+          userType: 'apple',
+          email: data.email,
+        })
+      }
+      const token = JWT.sign(
+        {
+          data: {
+            _id: user._id,
+            userType: user.userType,
+            email: user.email,
+          },
+        },
+        config.secretTokenKey
+      )
+      const response = {
+        token: token,
+        _id: user._id,
+        email: user.email,
+      }
+      res.status(200).json({
+        status: true,
+        statusCode: 200,
+        data: { data: response },
+        message: 'Login successfully',
+      })
+    } else {
+      return res.status(400).json({
+        status: false,
+        statusCode: 400,
+        message: 'Error while google login',
+      })
+    }
+  } catch (error) {
+    catchErrorLogs('Error while google login')
+    catchErrorLogs(error)
+    return res.status(400).json({
+      status: false,
+      statusCode: 400,
+      message: 'Error while google login',
+    })
+  }
+}
 const addAlphabetData = async (req, res) => {
   try {
     let body = {
       alpha_character: req.body.alpha_character,
       name: req.body.name,
+    }
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
     }
     if (req.files) {
       const fl = req.files
@@ -215,90 +283,211 @@ const getAlphabetData = async (req, res) => {
   }
 }
 
-const svgTable = async (req, res) => {
+// const addAlphabets = async (req, res) => {
+//   try {
+//     let body = {
+//       alpha_character: req.body.alpha_character,
+//       color_code: req.body.color_code,
+//     }
+//     if (req.files) {
+//       const fl = req.files
+//       fl.forEach(element => {
+//         if (
+//           element.mimetype === 'audio/mpeg' ||
+//           element.mimetype === 'audio/mp4' ||
+//           element.mimetype === 'audio/x-aiff'
+//         ) {
+//           body['chara_voice_url'] = {
+//             path: element.path,
+//             originalName: element.originalname,
+//             name: element.filename,
+//             destination: element.destination,
+//           }
+//         } else {
+//           body['svg_url'] = {
+//             path: element.path,
+//             originalName: element.originalname,
+//             name: element.filename,
+//             destination: element.destination,
+//           }
+//         }
+//       })
+//     }
+//     const addingSvgData = new SvgModel(body)
+
+//     const dataExist = await SvgModel.findOne({
+//       alpha_character: body.alpha_character,
+//     })
+//     if (dataExist === undefined || dataExist === null) {
+//       const insertValues = await addingSvgData.save()
+//       return res.status(200).json({
+//         status: true,
+//         statusCode: 200,
+//         message: 'data added succesfully',
+//         data: { data: insertValues },
+//       })
+//     } else {
+//       let charactor = body.alpha_character
+//       const data = await SvgModel.updateOne(
+//         { charactor },
+//         {
+//           $set: {
+//             alpha_character: body.alpha_character,
+//             color_code: body.color_code,
+//             chara_voice_url: body.chara_voice_url,
+//             svg_url: body.svg_url,
+//           },
+//         },
+//         {
+//           new: true,
+//         }
+//       )
+//       console.log('data-->', data)
+//     }
+//     return res.status(200).json({
+//       status: true,
+//       statusCode: 200,
+//       message: 'data added succesfully',
+//       data: { data: body },
+//     })
+//   } catch (e) {
+//     console.log('e-->', e)
+//     return res.status(400).json({
+//       status: false,
+//       statusCode: 400,
+//       message: 'Error while add data',
+//       error: e,
+//     })
+//   }
+// }
+
+// const alphabetlist = async (req, res) => {
+//   try {
+//     let alphabetArray = await alphabetsSvgArray()
+//     var arrList = []
+//     if (alphabetArray.length === undefined || alphabetArray.length === null) {
+//       return res.status(404).json({
+//         status: true,
+//         statusCode: 404,
+//         message: 'data not found',
+//         data: [],
+//       })
+//     }
+//     await alphabetArray.forEach(async (element, index) => {
+//       console.log('index 1==>', index)
+
+//       var newObj
+//       await Alphabet.find({ alpha_character: element.alpha_character })
+//         .then(res => {
+//           var dataArr = []
+//           res.forEach((element, i) => {
+//             var inObj = {
+//               image_url: `${element.image_url.destination}/${element.image_url.name}`,
+//               _id: element._id,
+//               alpha_character: element.alpha_character,
+//               name: element.name,
+//               voice_url: `${element.voice_url.destination}/${element.voice_url.name}`,
+//             }
+//             dataArr.push(inObj)
+//           })
+//           newObj = { ...element, data: res.length > 0 ? dataArr : [] }
+//           arrList.push(newObj)
+//         })
+//         .catch(err => console.log('err-->', err))
+//       console.log('index 2==>', index)
+
+//       if (alphabetArray.length == index + 1) {
+//         return res.status(200).json({
+//           status: true,
+//           statusCode: 200,
+//           message: 'data get successfully',
+//           data: arrList,
+//         })
+//       }
+//     })
+//   } catch (error) {
+//     console.log('error-->', error)
+//   }
+// }
+
+const addAlphabets = async (req, res) => {
   try {
-    let body = {
-      alpha_character: req.body.alpha_character,
-      color_code: req.body.color_code,
+    const { alpha_character, color_code } = req.body
+    const body = { alpha_character, color_code }
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
     }
     if (req.files) {
-      const fl = req.files
-      fl.forEach(element => {
+      req.files.forEach(element => {
+        const { mimetype, path, originalname, filename, destination } = element
+        const fileData = {
+          path,
+          originalName: originalname,
+          name: filename,
+          destination,
+        }
+
         if (
-          element.mimetype === 'audio/mpeg' ||
-          element.mimetype === 'audio/mp4' ||
-          element.mimetype === 'audio/x-aiff'
+          mimetype === 'audio/mpeg' ||
+          mimetype === 'audio/mp4' ||
+          mimetype === 'audio/x-aiff'
         ) {
-          body['chara_voice_url'] = {
-            path: element.path,
-            originalName: element.originalname,
-            name: element.filename,
-            destination: element.destination,
-          }
+          body.chara_voice_url = fileData
         } else {
-          body['svg_url'] = {
-            path: element.path,
-            originalName: element.originalname,
-            name: element.filename,
-            destination: element.destination,
-          }
+          body.svg_url = fileData
         }
       })
     }
-    const addingSvgData = new SvgModel(body)
 
-    const dataExist = await SvgModel.findOne({
-      alpha_character: body.alpha_character,
-    })
-    console.log('dataExist-->', dataExist)
-    if (dataExist === undefined || dataExist === null) {
-      const insertValues = await addingSvgData.save()
+    const dataExist = await AlphabetCollectionModel.findOne({ alpha_character })
+
+    if (!dataExist) {
+      const insertValues = await AlphabetCollectionModel.create(body)
       return res.status(200).json({
         status: true,
         statusCode: 200,
-        message: 'data added succesfully',
+        message: 'data added successfully',
         data: { data: insertValues },
       })
     } else {
-      let charactor = body.alpha_character
-      const data = await SvgModel.updateOne(
-        { charactor },
-        {
-          $set: {
-            alpha_character: body.alpha_character,
-            color_code: body.color_code,
-            chara_voice_url: body.chara_voice_url,
-            svg_url: body.svg_url,
-          },
-        },
+      const data = await AlphabetCollectionModel.findOneAndUpdate(
+        { alpha_character },
+        body,
         {
           new: true,
         }
       )
       console.log('data-->', data)
     }
+
     return res.status(200).json({
       status: true,
       statusCode: 200,
-      message: 'data added succesfully',
+      message: 'data added successfully',
       data: { data: body },
     })
   } catch (e) {
-    console.log('e-->', e)
-    return res.status(400).json({
+    console.error('e-->', e)
+
+    // Determine the appropriate status code based on the error type
+    const statusCode = e instanceof ClientError ? 400 : 500
+
+    return res.status(statusCode).json({
       status: false,
-      statusCode: 400,
-      message: 'Error while add data',
-      error: e,
+      statusCode,
+      message: `Error while adding data: ${
+        e instanceof ClientError ? 'Bad Request' : 'Internal Server Error'
+      }`,
+      error: e.message,
     })
   }
 }
 
 const alphabetlist = async (req, res) => {
   try {
-    let alphabetArray = await alphabetsSvgArray()
-    var arrList = []
-    if (alphabetArray.length === undefined || alphabetArray.length === null) {
+    const alphabetArray = await alphabetsSvgArray()
+    if (!Array.isArray(alphabetArray) || alphabetArray.length === 0) {
       return res.status(404).json({
         status: true,
         statusCode: 404,
@@ -306,44 +495,97 @@ const alphabetlist = async (req, res) => {
         data: [],
       })
     }
-    await alphabetArray.forEach(async (element, index) => {
-      var newObj
-      await Alphabet.find({ alpha_character: element.alpha_character })
-        .then(res => {
-          var dataArr = []
-          res.forEach(element => {
-            var inObj = {
-              image_url: `${element.image_url.destination}/${element.image_url.name}`,
-              _id: element._id,
-              alpha_character: element.alpha_character,
-              name: element.name,
-              voice_url: `${element.voice_url.destination}/${element.voice_url.name}`,
-            }
-            dataArr.push(inObj)
-          })
-          newObj = { ...element, data: res.length > 0 ? dataArr : [] }
-          arrList.push(newObj)
-        })
-        .catch(err => console.log('err-->', err))
 
-      if (alphabetArray.length == index + 1) {
-        return res.status(200).json({
-          status: true,
-          statusCode: 200,
-          message: 'data get successfully',
-          data: arrList,
-        })
-      }
+    const arrList = []
+    for (const element of alphabetArray) {
+      const dataArr = await Alphabet.find({
+        alpha_character: element.alpha_character,
+      })
+      const newDataArr = dataArr.map(element => ({
+        image_url: `${element.image_url.destination}/${element.image_url.name}`,
+        _id: element._id,
+        alpha_character: element.alpha_character,
+        name: element.name,
+        voice_url: `${element.voice_url.destination}/${element.voice_url.name}`,
+      }))
+      arrList.push({ ...element, data: newDataArr })
+    }
+
+    return res.status(200).json({
+      status: true,
+      statusCode: 200,
+      message: 'data get successfully',
+      data: arrList,
     })
   } catch (error) {
-    console.log('error-->', error)
+    console.error('error-->', error)
+    return res.status(500).json({
+      status: false,
+      statusCode: 500,
+      message: 'An error occurred',
+      data: [],
+    })
   }
 }
+
+const updateAlpabets = async (req, res) => {
+  try {
+    const _id = req.params.id
+    const { name } = req.body
+    let voice_url, image_url
+
+    if (req.files) {
+      req.files.forEach(element => {
+        const { mimetype, path, originalname, filename, destination } = element
+        const fileData = {
+          path,
+          originalName: originalname,
+          name: filename,
+          destination,
+        }
+
+        if (
+          mimetype === 'audio/mpeg' ||
+          mimetype === 'audio/mp4' ||
+          mimetype === 'audio/x-aiff'
+        ) {
+          voice_url = fileData
+        } else {
+          image_url = fileData
+        }
+      })
+    }
+
+    const updatedUser = await Alphabet.findByIdAndUpdate(
+      _id,
+      { name, voice_url, image_url },
+      { new: true } // Return the updated user
+    )
+
+    return res.status(200).json({
+      status: true,
+      statusCode: 200,
+      message: 'data update successfully',
+      data: updatedUser,
+    })
+  } catch (error) {
+    console.error('error==>', error)
+    return res.status(500).json({
+      status: false,
+      statusCode: 500,
+      message: 'An error occurred',
+      data: null,
+    })
+  }
+}
+
 module.exports = {
   googleAuthentication,
   addAlphabetData,
   login,
   getAlphabetData,
-  svgTable,
+  addAlphabets,
   alphabetlist,
+  updateAlpabets,
+  appleAuthentication,
 }

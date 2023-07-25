@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const SvgSchema = new mongoose.Schema({
+const AlphabetCollectionSchema = new mongoose.Schema({
   alpha_character: {
     type: String,
     required: true,
@@ -48,6 +48,9 @@ const SvgSchema = new mongoose.Schema({
 })
 
 //we will create new collection
-const SvgModel = new mongoose.model('SvgCollection', SvgSchema)
+const AlphabetCollectionModel = new mongoose.model(
+  'SvgCollection',
+  AlphabetCollectionSchema
+)
 
-module.exports = SvgModel
+module.exports = AlphabetCollectionModel

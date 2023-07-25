@@ -1,8 +1,8 @@
-const SvgModel = require('../models/svgModel')
+const SvgModel = require('../models/AlphabetCollectionModel')
 
 const alphabetsSvgArray = async () => {
   return new Promise(async function (resolve, reject) {
-    const alphabetArray = await SvgModel.find({})
+    const alphabetArray = await SvgModel.find({}).exec()
 
     if (alphabetArray.length == 0) {
       reject([])
@@ -10,8 +10,8 @@ const alphabetsSvgArray = async () => {
     var arr = []
     await alphabetArray.forEach((element, index) => {
       const newObj = {
-        svg_url: element.svg_url.path,
-        chara_voice_url: element.chara_voice_url.path,
+        svg_url: `${element.svg_url.destination}/${element.svg_url.name}`,
+        chara_voice_url: `${element.chara_voice_url.destination}/${element.chara_voice_url.name}`,
         _id: element._id,
         alpha_character: element.alpha_character,
         color_code: element.color_code,

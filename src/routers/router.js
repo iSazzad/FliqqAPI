@@ -6,10 +6,16 @@ const {
   addAlphabetData,
   login,
   getAlphabetData,
-  svgTable,
   alphabetlist,
+  updateAlpabets,
+  addAlphabets,
+  appleAuthentication,
 } = require('../controllers/appController')
 const multer = require('multer')
+const {
+  alphabetCollectioValidation,
+  alphabetData,
+} = require('../helpers/validation')
 
 router.use(cookieParser())
 
@@ -35,16 +41,32 @@ const storageFile = multer.diskStorage({
     )
   },
 })
-const upload = multer({ storage: storageFile })
+const fileFilter = (req, file, cb) => {
+  file.mimetype === 'image/jpeg' ||
+  file.mimetype === 'image/jpg' ||
+  file.mimetype === 'image/svg+xml' ||
+  file.mimetype === 'image/png' ||
+  file.mimetype === 'image/gif'
+    ? cb(null, true)
+    : cb(null, false)
+}
+const upload = multer({ storage: storageFile, fileFilter: fileFilter })
 // add alphabets in collection
-router.post('/alphabets', upload.any('file'), addAlphabetData)
+router.post('/alphabets', upload.any('file'), alphabetData, addAlphabetData)
 
 router.post('/google-login', googleAuthentication)
 
 router.post('/dashboard-login', login)
 
 router.get('/get-alphabets-data', getAlphabetData)
-router.post('/svg-table', upload.any('file'), svgTable)
+router.post(
+  '/add-alphabets',
+  upload.any('file'),
+  alphabetCollectioValidation,
+  addAlphabets
+)
 router.get('/alphabets-list', alphabetlist)
+router.patch('/update-alphabets-data/:id', upload.any('file'), updateAlpabets)
+router.post('/apple-login', appleAuthentication)
 
 module.exports = router
