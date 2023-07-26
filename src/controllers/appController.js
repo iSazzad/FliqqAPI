@@ -412,11 +412,35 @@ const updateAlpabets = async (req, res) => {
     })
   }
 }
-const userLogin = async (req, res) => {
+const adminLogin = async (req, res) => {
   try {
-    console.log('req==>', req.body)
-  } catch (error) {
-    console.log('err--->', error)
+    const email = req.body.email
+    console.log('req login--->', req.body, process.env.ADMIN_PASSWORD)
+    const adminFind = await Users.findOne({
+      email: email,
+    }).exec()
+    console.log('adminFind login--->', adminFind)
+
+    if (req.body.password !== process.env.ADMIN_PASSWORD) {
+      return res.status(400).json({
+        message: 'Invalid password',
+      })
+    }
+    if (adminFind === undefined || adminFind === null) {
+      return res.status(404).json({
+        message: 'Data not found',
+      })
+    }
+    return res.status(200).json({
+      message: 'login successfully',
+      data: { data: adminFind },
+    })
+  } catch (e) {
+    console.log('e-->', e)
+    return res.status(400).json({
+      message: 'invalid login',
+      error: e,
+    })
   }
 }
 module.exports = {
@@ -428,5 +452,5 @@ module.exports = {
   alphabetlist,
   updateAlpabets,
   appleAuthentication,
-  userLogin,
+  adminLogin,
 }

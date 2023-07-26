@@ -10,7 +10,7 @@ const {
   updateAlpabets,
   addAlphabets,
   appleAuthentication,
-  userLogin,
+  adminLogin,
 } = require('../controllers/appController')
 const multer = require('multer')
 const {
@@ -76,6 +76,6 @@ router.post(
 router.get('/alphabets-list', alphabetlist)
 router.patch('/update-alphabets-data/:id', upload.any('file'), updateAlpabets)
 router.post('/apple-login', appleAuthentication)
-router.post('/user-login', userLogin)
+router.post('/admin-login', adminLogin)
 
 module.exports = router
