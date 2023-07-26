@@ -140,13 +140,12 @@ const appleAuthentication = async (req, res) => {
 }
 
 const addAlphabetData = async (req, res) => {
+  console.log('addAlphabetData req-->', req.body)
   try {
-    console.log('addAlphabetData req-->', req.body)
     const body = {
       alpha_character: req.body.alpha_character,
       name: req.body.name,
     }
-    // Validate the request using validationResult
     const errors = validationResult(req)
     console.log('errors-->', errors)
     if (!errors.isEmpty()) {
@@ -204,38 +203,6 @@ const addAlphabetData = async (req, res) => {
     return res.status(500).json({
       message: 'Error while adding data',
       error: error.message,
-    })
-  }
-}
-
-const login = async (req, res) => {
-  try {
-    const email = req.body.email
-    console.log('req login--->', req.body, process.env.ADMIN_PASSWORD)
-    const userFind = await Users.findOne({
-      email: email,
-    })
-    console.log('userFind login--->', userFind)
-
-    if (req.body.password !== process.env.ADMIN_PASSWORD) {
-      return res.status(400).json({
-        message: 'Invalid password',
-      })
-    }
-    if (userFind === undefined || userFind === null) {
-      return res.status(404).json({
-        message: 'Data not found',
-      })
-    }
-    return res.status(200).json({
-      message: 'login successfully',
-      data: { data: userFind },
-    })
-  } catch (e) {
-    console.log('e-->', e)
-    return res.status(400).json({
-      message: 'invalid login',
-      error: e,
     })
   }
 }
@@ -413,9 +380,9 @@ const updateAlpabets = async (req, res) => {
   }
 }
 const adminLogin = async (req, res) => {
+  console.log('req login--->', req.body, process.env.ADMIN_PASSWORD)
   try {
     const email = req.body.email
-    console.log('req login--->', req.body, process.env.ADMIN_PASSWORD)
     const adminFind = await Users.findOne({
       email: email,
     }).exec()
@@ -446,7 +413,6 @@ const adminLogin = async (req, res) => {
 module.exports = {
   googleAuthentication,
   addAlphabetData,
-  login,
   getAlphabetData,
   addAlphabets,
   alphabetlist,

@@ -4,7 +4,6 @@ const cookieParser = require('cookie-parser')
 const {
   googleAuthentication,
   addAlphabetData,
-  login,
   getAlphabetData,
   alphabetlist,
   updateAlpabets,
@@ -63,8 +62,6 @@ router.post(
 )
 
 router.post('/google-login', googleAuthentication)
-
-router.post('/dashboard-login', login)
 
 router.get('/get-alphabets-data', getAlphabetData)
 router.post(
