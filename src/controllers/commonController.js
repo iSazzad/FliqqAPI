@@ -25,12 +25,15 @@ const alphabetsSvgArray = async () => {
   })
 }
 
-const statusMessage = (res, statusCode, message, data) => {
+const statusMessage = (res, statusCode, message, data, error) => {
   return new Promise((resolve, reject) => {
     res.status(statusCode)
     const response = { message }
     if (data) {
       response.data = { data: data }
+    }
+    if (error) {
+      response.error = error
     }
     resolve(res.json(response))
   })

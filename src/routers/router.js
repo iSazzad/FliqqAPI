@@ -54,15 +54,14 @@ const fileFilter = (req, file, cb) => {
 }
 const upload = multer({ storage: storageFile, fileFilter: fileFilter })
 // add alphabets in collection
+
+router.post('/google-login', googleAuthentication)
 router.post(
   '/alphabets-data',
   upload.any('file'),
   alphabetDataValidation,
   addAlphabetData
 )
-
-router.post('/google-login', googleAuthentication)
-
 router.get('/get-alphabets-data', getAlphabetData)
 router.post(
   '/add-alphabets',
