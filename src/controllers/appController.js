@@ -412,11 +412,11 @@ const adminLogin = async (req, res) => {
 }
 module.exports = {
   googleAuthentication,
-  addAlphabetData,
   getAlphabetData,
   addAlphabets,
   alphabetlist,
   updateAlpabets,
   appleAuthentication,
+  addAlphabetData,
   adminLogin,
 }

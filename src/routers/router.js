@@ -3,13 +3,13 @@ const router = new express.Router()
 const cookieParser = require('cookie-parser')
 const {
   googleAuthentication,
-  addAlphabetData,
   getAlphabetData,
   alphabetlist,
   updateAlpabets,
   addAlphabets,
   appleAuthentication,
   adminLogin,
+  addAlphabetData,
 } = require('../controllers/appController')
 const multer = require('multer')
 const {
