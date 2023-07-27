@@ -150,25 +150,16 @@ const addAlphabets = async (req, res) => {
     if (!errors.isEmpty()) {
       return res.status(403).json({ errors: errors.array() })
     }
-    if (req.files) {
+    if (req.files && req.files.length > 0) {
       req.files.forEach(element => {
-        const { mimetype, path, originalname, filename, destination } = element
+        const { path, originalname, filename, destination } = element
         const fileData = {
           path,
           originalName: originalname,
           name: filename,
           destination,
         }
-
-        if (
-          mimetype === 'audio/mpeg' ||
-          mimetype === 'audio/mp4' ||
-          mimetype === 'audio/x-aiff'
-        ) {
-          body.chara_voice_url = fileData
-        } else {
-          body.svg_url = fileData
-        }
+        body.svg_url = fileData
       })
     }
     const dataExist = await AlphabetCollectionModel.findOne({
@@ -210,7 +201,6 @@ const alphabetlist = async (req, res) => {
         _id: element._id,
         alpha_character: element.alpha_character,
         name: element.name,
-        voice_url: `${element.voice_url.destination}/${element.voice_url.name}`,
       }))
       arrList.push({ ...element, data: newDataArr })
     }
@@ -246,33 +236,22 @@ const updateAlpabets = async (req, res) => {
   try {
     const _id = req.params.id
     const { name } = req.body
-    let voice_url, image_url
-
-    if (req.files) {
+    let image_url
+    if (req.files && req.files.length > 0) {
+      // Assuming that req.files is an array of files
       req.files.forEach(element => {
-        const { mimetype, path, originalname, filename, destination } = element
-        const fileData = {
-          path,
-          originalName: originalname,
-          name: filename,
-          destination,
-        }
-
-        if (
-          mimetype === 'audio/mpeg' ||
-          mimetype === 'audio/mp4' ||
-          mimetype === 'audio/x-aiff'
-        ) {
-          voice_url = fileData
-        } else {
-          image_url = fileData
+        body['image_url'] = {
+          path: element.path,
+          originalName: element.originalname,
+          name: element.filename,
+          destination: element.destination,
         }
       })
     }
 
     const updatedUser = await AlphabetData.findByIdAndUpdate(
       _id,
-      { name, voice_url, image_url },
+      { name, image_url },
       { new: true } // Return the updated user
     )
     statusMessage(res, 200, 'data update successfully', updatedUser, null)
@@ -294,24 +273,11 @@ const addAlphabetData = async (req, res) => {
     if (req.files && req.files.length > 0) {
       // Assuming that req.files is an array of files
       req.files.forEach(element => {
-        if (
-          element.mimetype === 'audio/mpeg' ||
-          element.mimetype === 'audio/mp4' ||
-          element.mimetype === 'audio/x-aiff'
-        ) {
-          body['voice_url'] = {
-            path: element.path,
-            originalName: element.originalname,
-            name: element.filename,
-            destination: element.destination,
-          }
-        } else {
-          body['image_url'] = {
-            path: element.path,
-            originalName: element.originalname,
-            name: element.filename,
-            destination: element.destination,
-          }
+        body['image_url'] = {
+          path: element.path,
+          originalName: element.originalname,
+          name: element.filename,
+          destination: element.destination,
         }
       })
     }
