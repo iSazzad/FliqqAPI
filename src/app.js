@@ -32,8 +32,18 @@ app.use(router)
 app.use(express.urlencoded({ extended: false }))
 router.use(cookieParser())
 app.use(bodyParser.json())
-app.use('/src/public', express.static(path.join(__dirname, 'public')))
+// app.use('/src/public', express.static(path.join(__dirname, 'public')))
+// Serve static files from the 'uploads' folder under the route '/uploads'
 
+app.use(
+  '/src/public/uploads',
+  express.static(path.join(__dirname, 'public', 'uploads'))
+)
+
+app.use(
+  '/src/public/audios',
+  express.static(path.join(__dirname, 'public', 'audios'))
+)
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`)
 })

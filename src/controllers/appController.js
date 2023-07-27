@@ -1,5 +1,5 @@
 const { OAuth2Client, JWT } = require('google-auth-library')
-const Alphabet = require('../models/alphabets')
+const AlphabetData = require('../models/alphabetsData')
 const Users = require('../models/users')
 const jwt = require('jsonwebtoken')
 const AlphabetCollectionModel = require('../models/AlphabetCollectionModel')
@@ -131,7 +131,7 @@ const appleAuthentication = async (req, res) => {
 
 const getAlphabetData = async (req, res) => {
   try {
-    const data = await Alphabet.find({}).exec()
+    const data = await AlphabetData.find({}).exec()
     if (data.length > 0) {
       statusMessage(res, 200, 'Data retrieved successfully', data, null)
     } else {
@@ -202,7 +202,7 @@ const alphabetlist = async (req, res) => {
 
     const arrList = []
     for (const element of alphabetArray) {
-      const dataArr = await Alphabet.find({
+      const dataArr = await AlphabetData.find({
         alpha_character: element.alpha_character,
       })
       const newDataArr = dataArr.map(element => ({
@@ -218,6 +218,27 @@ const alphabetlist = async (req, res) => {
   } catch (error) {
     console.error('error-->', error)
     await statusMessage(res, 500, 'Error while fetching data', [])
+  }
+}
+
+const deleteAlpabetsData = async (req, res) => {
+  try {
+    const id = req.params.id
+    const deletedAlphabetData = await AlphabetData.findByIdAndDelete(id)
+
+    if (!deletedAlphabetData) {
+      statusMessage(res, 404, 'Data not found for the given ID.', null, null)
+    } else {
+      statusMessage(
+        res,
+        200,
+        'Data deleted successfully',
+        deletedAlphabetData,
+        null
+      )
+    }
+  } catch (error) {
+    statusMessage(res, 500, 'An error occurred', null, error.message)
   }
 }
 
@@ -249,7 +270,7 @@ const updateAlpabets = async (req, res) => {
       })
     }
 
-    const updatedUser = await Alphabet.findByIdAndUpdate(
+    const updatedUser = await AlphabetData.findByIdAndUpdate(
       _id,
       { name, voice_url, image_url },
       { new: true } // Return the updated user
@@ -260,7 +281,6 @@ const updateAlpabets = async (req, res) => {
   }
 }
 const addAlphabetData = async (req, res) => {
-  console.log('addAlphabetData req-->', req.body)
   try {
     const body = {
       alpha_character: req.body.alpha_character,
@@ -296,7 +316,7 @@ const addAlphabetData = async (req, res) => {
       })
     }
 
-    const dataExist = await Alphabet.findOne({
+    const dataExist = await AlphabetData.findOne({
       $and: [
         { alpha_character: req.body.alpha_character },
         { name: req.body.name },
@@ -306,7 +326,7 @@ const addAlphabetData = async (req, res) => {
       statusMessage(res, 400, 'This Name Already Exists', {}, null)
     }
 
-    const addingAlphabets = new Alphabet(body)
+    const addingAlphabets = new AlphabetData(body)
     const insertValues = await addingAlphabets.save()
     console.log('add alphabets data-->', insertValues)
     statusMessage(res, 201, 'Data added successfully', insertValues, null)
@@ -340,4 +360,5 @@ module.exports = {
   appleAuthentication,
   addAlphabetData,
   adminLogin,
+  deleteAlpabetsData,
 }

@@ -48,6 +48,6 @@ const alphabetSchema = new mongoose.Schema({
 })
 
 //we will create new collection
-const Alphabet = new mongoose.model('Alphabet', alphabetSchema)
+const AlphabetData = new mongoose.model('Alphabet', alphabetSchema)
 
-module.exports = Alphabet
+module.exports = AlphabetData
