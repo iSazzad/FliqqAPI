@@ -6,6 +6,8 @@ const AlphabetCollectionModel = require('../models/AlphabetCollectionModel')
 const { alphabetsSvgArray, statusMessage } = require('./commonController')
 const appleSignin = require('apple-signin-auth')
 const { validationResult } = require('express-validator')
+const SvgModel = require('../models/AlphabetCollectionModel')
+
 const users = []
 const client = new OAuth2Client([
   '151836319995-ec3t6nq6hm1rjkq1v6c9b4vn6uurl6sf.apps.googleusercontent.com',
@@ -204,6 +206,16 @@ const alphabetlist = async (req, res) => {
       }))
       arrList.push({ ...element, data: newDataArr })
     }
+    // const listCharactorwithNale = await SvgModel.aggregate([
+    //   {
+    //     $lookup: {
+    //       from: 'alphabets',
+    //       localField: 'alpha_character',
+    //       foreignField: 'alpha_character',
+    //       as: 'data',
+    //     },
+    //   },
+    // ])
     await statusMessage(res, 200, 'data get successfully', arrList)
   } catch (error) {
     console.error('error-->', error)
@@ -236,7 +248,7 @@ const updateAlpabets = async (req, res) => {
   try {
     const _id = req.params.id
     const { name } = req.body
-    let image_url
+    const body = { name }
     if (req.files && req.files.length > 0) {
       // Assuming that req.files is an array of files
       req.files.forEach(element => {
@@ -251,7 +263,7 @@ const updateAlpabets = async (req, res) => {
 
     const updatedUser = await AlphabetData.findByIdAndUpdate(
       _id,
-      { name, image_url },
+      body,
       { new: true } // Return the updated user
     )
     statusMessage(res, 200, 'data update successfully', updatedUser, null)
