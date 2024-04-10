@@ -15,6 +15,7 @@ function upsert(array, item) {
   if (i > -1) array[i] = item
   else array.push(item)
 }
+
 const googleAuthentication = async (req, res) => {
   try {
     const { idToken } = req.body
@@ -82,6 +83,7 @@ const googleAuthentication = async (req, res) => {
     })
   }
 }
+
 const appleAuthentication = async (req, res) => {
   try {
     const data = await appleSignin.verifyIdToken(req.body.idToken, {
@@ -290,9 +292,8 @@ const addAlphabets = async (req, res) => {
     const statusCode = e instanceof ClientError ? 400 : 500
 
     return res.status(statusCode).json({
-      message: `Error while adding data: ${
-        e instanceof ClientError ? 'Bad Request' : 'Internal Server Error'
-      }`,
+      message: `Error while adding data: ${e instanceof ClientError ? 'Bad Request' : 'Internal Server Error'
+        }`,
       error: e.message,
     })
   }
@@ -379,6 +380,7 @@ const updateAlpabets = async (req, res) => {
     })
   }
 }
+
 const adminLogin = async (req, res) => {
   console.log('req login--->', req.body, process.env.ADMIN_PASSWORD)
   try {
@@ -410,6 +412,7 @@ const adminLogin = async (req, res) => {
     })
   }
 }
+
 module.exports = {
   googleAuthentication,
   addAlphabetData,
