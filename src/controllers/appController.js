@@ -1,30 +1,25 @@
 const { OAuth2Client, JWT } = require('google-auth-library')
-const AlphabetData = require('../models/alphabetsData')
+const Alphabet = require('../models/alphabets')
 const Users = require('../models/users')
 const jwt = require('jsonwebtoken')
 const AlphabetCollectionModel = require('../models/AlphabetCollectionModel')
 const { alphabetsSvgArray, statusMessage } = require('./commonController')
 const appleSignin = require('apple-signin-auth')
 const { validationResult } = require('express-validator')
-const SvgModel = require('../models/AlphabetCollectionModel')
-
 const users = []
-const client = new OAuth2Client([
-  '151836319995-ec3t6nq6hm1rjkq1v6c9b4vn6uurl6sf.apps.googleusercontent.com',
-])
+const client = new OAuth2Client([process.env.CLIENT_ID])
 function upsert(array, item) {
   const i = array.findIndex(_item => _item.email === item.email)
   if (i > -1) array[i] = item
   else array.push(item)
 }
+
 const googleAuthentication = async (req, res) => {
   try {
     const { idToken } = req.body
     const ticket = await client.verifyIdToken({
       idToken: idToken,
-      requiredAudience: [
-        '151836319995-ec3t6nq6hm1rjkq1v6c9b4vn6uurl6sf.apps.googleusercontent.com',
-      ],
+      requiredAudience: [process.env.CLIENT_ID],
     })
     const { name, email, picture, given_name, family_name } =
       await ticket.getPayload()
@@ -52,7 +47,10 @@ const googleAuthentication = async (req, res) => {
     })
     if (dataExist === undefined || dataExist === null) {
       const addDb = await addDbObj.save()
-      statusMessage(res, 200, 'user added succesfully', addDb, null)
+      return res.status(200).json({
+        message: 'user added succesfully',
+        data: { data: addDb },
+      })
     } else {
       await Users.updateOne(
         { email },
@@ -69,11 +67,19 @@ const googleAuthentication = async (req, res) => {
         }
       )
     }
-    statusMessage(res, 200, 'user added succesfully', body, null)
+    return res.status(200).json({
+      message: 'user added succesfully',
+      data: { data: body },
+    })
   } catch (error) {
-    statusMessage(res, 500, 'An error occurred', null, error.message)
+    console.log('error user--->', error)
+    return res.status(400).json({
+      message: 'Error while add data',
+      error: error,
+    })
   }
 }
+
 const appleAuthentication = async (req, res) => {
   try {
     const data = await appleSignin.verifyIdToken(req.body.idToken, {
@@ -106,7 +112,7 @@ const appleAuthentication = async (req, res) => {
             email: user.email,
           },
         },
-        config.secretTokenKey
+        process.env.SECRET_KEY
       )
       const response = {
         token: token,
@@ -131,16 +137,94 @@ const appleAuthentication = async (req, res) => {
   }
 }
 
+const addAlphabetData = async (req, res) => {
+  console.log('addAlphabetData req-->', req.body)
+  try {
+    const body = {
+      alpha_character: req.body.alpha_character,
+      name: req.body.name,
+    }
+    const errors = validationResult(req)
+    console.log('errors-->', errors)
+    if (!errors.isEmpty()) {
+      return res.status(403).json({ errors: errors.array() })
+    }
+
+    if (req.files && req.files.length > 0) {
+      // Assuming that req.files is an array of files
+      req.files.forEach(element => {
+        if (
+          element.mimetype === 'audio/mpeg' ||
+          element.mimetype === 'audio/mp4' ||
+          element.mimetype === 'audio/x-aiff'
+        ) {
+          body['voice_url'] = {
+            path: element.path,
+            originalName: element.originalname,
+            name: element.filename,
+            destination: element.destination,
+          }
+        } else {
+          body['image_url'] = {
+            path: element.path,
+            originalName: element.originalname,
+            name: element.filename,
+            destination: element.destination,
+          }
+        }
+      })
+    }
+
+    const dataExist = await Alphabet.findOne({
+      $and: [
+        { alpha_character: req.body.alpha_character },
+        { name: req.body.name },
+      ],
+    })
+    console.log('dataExist-->', dataExist, body)
+    if (dataExist) {
+      return res.status(400).json({
+        message: 'This Name Already Exists',
+        data: {},
+      })
+    }
+
+    const addingAlphabets = new Alphabet(body)
+    const insertValues = await addingAlphabets.save()
+    console.log('add alphabets data-->', insertValues)
+    return res.status(201).json({
+      message: 'Data added successfully',
+      data: { data: insertValues },
+    })
+  } catch (error) {
+    console.error('Error:', error)
+    return res.status(500).json({
+      message: 'Error while adding data',
+      error: error.message,
+    })
+  }
+}
+
 const getAlphabetData = async (req, res) => {
   try {
-    const data = await AlphabetData.find({}).exec()
+    const data = await Alphabet.find({})
+    console.log('getAlphabetData', data.length)
     if (data.length > 0) {
-      statusMessage(res, 200, 'Data retrieved successfully', data, null)
+      return res.status(200).json({
+        message: 'Data retrieved successfully',
+        data: { data: data },
+      })
     } else {
-      statusMessage(res, 404, 'Data not found', [], null)
+      return res.status(404).json({
+        message: 'Data not found',
+        data: [],
+      })
     }
   } catch (error) {
-    statusMessage(res, 500, 'Error while fetching data', null, error.message)
+    return res.status(500).json({
+      message: 'Error while fetching data',
+      error: error.message,
+    })
   }
 }
 
@@ -152,25 +236,36 @@ const addAlphabets = async (req, res) => {
     if (!errors.isEmpty()) {
       return res.status(403).json({ errors: errors.array() })
     }
-    if (req.files && req.files.length > 0) {
+    if (req.files) {
       req.files.forEach(element => {
-        const { path, originalname, filename, destination } = element
+        const { mimetype, path, originalname, filename, destination } = element
         const fileData = {
           path,
           originalName: originalname,
           name: filename,
           destination,
         }
-        body.svg_url = fileData
+
+        if (
+          mimetype === 'audio/mpeg' ||
+          mimetype === 'audio/mp4' ||
+          mimetype === 'audio/x-aiff'
+        ) {
+          body.chara_voice_url = fileData
+        } else {
+          body.svg_url = fileData
+        }
       })
     }
-    const dataExist = await AlphabetCollectionModel.findOne({
-      alpha_character,
-    })
+    console.log('body-->', body)
+    const dataExist = await AlphabetCollectionModel.findOne({ alpha_character })
 
     if (!dataExist) {
       const insertValues = await AlphabetCollectionModel.create(body)
-      statusMessage(res, 200, 'data added successfully', insertValues, null)
+      return res.status(200).json({
+        message: 'data added successfully',
+        data: { data: insertValues },
+      })
     } else {
       const data = await AlphabetCollectionModel.findOneAndUpdate(
         { alpha_character },
@@ -179,10 +274,24 @@ const addAlphabets = async (req, res) => {
           new: true,
         }
       )
+      console.log('data-->', data)
     }
-    statusMessage(res, 200, 'data added successfully', body, null)
-  } catch (error) {
-    statusMessage(res, 500, 'Error while adding data', null, error.message)
+
+    return res.status(200).json({
+      message: 'data added successfully',
+      data: { data: body },
+    })
+  } catch (e) {
+    console.error('e-->', e)
+
+    // Determine the appropriate status code based on the error type
+    const statusCode = e instanceof ClientError ? 400 : 500
+
+    return res.status(statusCode).json({
+      message: `Error while adding data: ${e instanceof ClientError ? 'Bad Request' : 'Internal Server Error'
+        }`,
+      error: e.message,
+    })
   }
 }
 
@@ -190,12 +299,15 @@ const alphabetlist = async (req, res) => {
   try {
     const alphabetArray = await alphabetsSvgArray()
     if (!Array.isArray(alphabetArray) || alphabetArray.length === 0) {
-      statusMessage(res, 404, 'data not found', [], null)
+      return res.status(404).json({
+        message: 'data not found',
+        data: [],
+      })
     }
 
     const arrList = []
     for (const element of alphabetArray) {
-      const dataArr = await AlphabetData.find({
+      const dataArr = await Alphabet.find({
         alpha_character: element.alpha_character,
       })
       const newDataArr = dataArr.map(element => ({
@@ -203,44 +315,18 @@ const alphabetlist = async (req, res) => {
         _id: element._id,
         alpha_character: element.alpha_character,
         name: element.name,
+        voice_url: `${element.voice_url.destination}/${element.voice_url.name}`,
       }))
       arrList.push({ ...element, data: newDataArr })
     }
-    // const listCharactorwithNale = await SvgModel.aggregate([
-    //   {
-    //     $lookup: {
-    //       from: 'alphabets',
-    //       localField: 'alpha_character',
-    //       foreignField: 'alpha_character',
-    //       as: 'data',
-    //     },
-    //   },
-    // ])
     await statusMessage(res, 200, 'data get successfully', arrList)
+    // return res.status(200).json({
+    //   message: 'data get successfully',
+    //   data: { data: arrList },
+    // })
   } catch (error) {
     console.error('error-->', error)
     await statusMessage(res, 500, 'Error while fetching data', [])
-  }
-}
-
-const deleteAlpabetsData = async (req, res) => {
-  try {
-    const id = req.params.id
-    const deletedAlphabetData = await AlphabetData.findByIdAndDelete(id)
-
-    if (!deletedAlphabetData) {
-      statusMessage(res, 404, 'Data not found for the given ID.', null, null)
-    } else {
-      statusMessage(
-        res,
-        200,
-        'Data deleted successfully',
-        deletedAlphabetData,
-        null
-      )
-    }
-  } catch (error) {
-    statusMessage(res, 500, 'An error occurred', null, error.message)
   }
 }
 
@@ -248,95 +334,88 @@ const updateAlpabets = async (req, res) => {
   try {
     const _id = req.params.id
     const { name } = req.body
-    const body = { name }
-    if (req.files && req.files.length > 0) {
-      // Assuming that req.files is an array of files
+    let voice_url, image_url
+
+    if (req.files) {
       req.files.forEach(element => {
-        body['image_url'] = {
-          path: element.path,
-          originalName: element.originalname,
-          name: element.filename,
-          destination: element.destination,
+        const { mimetype, path, originalname, filename, destination } = element
+        const fileData = {
+          path,
+          originalName: originalname,
+          name: filename,
+          destination,
+        }
+
+        if (
+          mimetype === 'audio/mpeg' ||
+          mimetype === 'audio/mp4' ||
+          mimetype === 'audio/x-aiff'
+        ) {
+          voice_url = fileData
+        } else {
+          image_url = fileData
         }
       })
     }
 
-    const updatedUser = await AlphabetData.findByIdAndUpdate(
+    const updatedUser = await Alphabet.findByIdAndUpdate(
       _id,
-      body,
+      { name, voice_url, image_url },
       { new: true } // Return the updated user
     )
-    statusMessage(res, 200, 'data update successfully', updatedUser, null)
-  } catch (error) {
-    statusMessage(res, 500, 'An error occurred', null, error.message)
-  }
-}
-const addAlphabetData = async (req, res) => {
-  try {
-    const body = {
-      alpha_character: req.body.alpha_character,
-      name: req.body.name,
-    }
-    const errors = validationResult(req)
-    if (!errors.isEmpty()) {
-      return res.status(403).json({ errors: errors.array() })
-    }
 
-    if (req.files && req.files.length > 0) {
-      // Assuming that req.files is an array of files
-      req.files.forEach(element => {
-        body['image_url'] = {
-          path: element.path,
-          originalName: element.originalname,
-          name: element.filename,
-          destination: element.destination,
-        }
-      })
-    }
-
-    const dataExist = await AlphabetData.findOne({
-      $and: [
-        { alpha_character: req.body.alpha_character },
-        { name: req.body.name },
-      ],
+    return res.status(200).json({
+      message: 'data update successfully',
+      data: updatedUser,
     })
-    if (dataExist) {
-      statusMessage(res, 400, 'This Name Already Exists', {}, null)
-    }
-
-    const addingAlphabets = new AlphabetData(body)
-    const insertValues = await addingAlphabets.save()
-    console.log('add alphabets data-->', insertValues)
-    statusMessage(res, 201, 'Data added successfully', insertValues, null)
   } catch (error) {
-    statusMessage(res, 500, 'Error while adding data', null, error.message)
+    console.error('error==>', error)
+    return res.status(500).json({
+      message: 'An error occurred',
+      data: null,
+    })
   }
 }
+
 const adminLogin = async (req, res) => {
+  console.log('req login--->', req.body, process.env.ADMIN_PASSWORD)
   try {
     const email = req.body.email
     const adminFind = await Users.findOne({
       email: email,
     }).exec()
+    console.log('adminFind login--->', adminFind)
+
     if (req.body.password !== process.env.ADMIN_PASSWORD) {
-      statusMessage(res, 400, 'Invalid password', null, null)
+      return res.status(400).json({
+        message: 'Invalid password',
+      })
     }
     if (adminFind === undefined || adminFind === null) {
-      statusMessage(res, 404, 'admin not register', null, null)
+      return res.status(404).json({
+        message: 'Data not found',
+      })
     }
-    statusMessage(res, 200, 'login successfully', adminFind, null)
-  } catch (error) {
-    statusMessage(res, 500, 'invalid login', null, error.message)
+    return res.status(200).json({
+      message: 'login successfully',
+      data: { data: adminFind },
+    })
+  } catch (e) {
+    console.log('e-->', e)
+    return res.status(400).json({
+      message: 'invalid login',
+      error: e,
+    })
   }
 }
+
 module.exports = {
   googleAuthentication,
+  addAlphabetData,
   getAlphabetData,
   addAlphabets,
   alphabetlist,
   updateAlpabets,
   appleAuthentication,
-  addAlphabetData,
   adminLogin,
-  deleteAlpabetsData,
 }

@@ -5,7 +5,7 @@ const app = express()
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const mongoose = require('mongoose')
-const Db = process.env.DATABASE
+const Db = process.env.DB_NAME
 const port = process.env.PORT || 4000
 const path = require('path')
 
@@ -32,18 +32,8 @@ app.use(router)
 app.use(express.urlencoded({ extended: false }))
 router.use(cookieParser())
 app.use(bodyParser.json())
-// app.use('/src/public', express.static(path.join(__dirname, 'public')))
-// Serve static files from the 'uploads' folder under the route '/uploads'
+app.use('/src/public', express.static(path.join(__dirname, 'public')))
 
-app.use(
-  '/src/public/uploads',
-  express.static(path.join(__dirname, 'public', 'uploads'))
-)
-
-app.use(
-  '/src/public/audios',
-  express.static(path.join(__dirname, 'public', 'audios'))
-)
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`)
 })

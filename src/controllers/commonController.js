@@ -11,6 +11,7 @@ const alphabetsSvgArray = async () => {
     await alphabetArray.forEach((element, index) => {
       const newObj = {
         svg_url: `${element.svg_url.destination}/${element.svg_url.name}`,
+        chara_voice_url: `${element.chara_voice_url.destination}/${element.chara_voice_url.name}`,
         _id: element._id,
         alpha_character: element.alpha_character,
         color_code: element.color_code,
@@ -24,15 +25,12 @@ const alphabetsSvgArray = async () => {
   })
 }
 
-const statusMessage = (res, statusCode, message, data, error) => {
+const statusMessage = (res, statusCode, message, data) => {
   return new Promise((resolve, reject) => {
     res.status(statusCode)
     const response = { message }
     if (data) {
       response.data = { data: data }
-    }
-    if (error) {
-      response.error = error
     }
     resolve(res.json(response))
   })
