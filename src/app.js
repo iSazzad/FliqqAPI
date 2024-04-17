@@ -1,20 +1,15 @@
 require('dotenv').config()
+require("./db/connection");
+
 const express = require('express')
-const router = require('./routers/router')
 const app = express()
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
-const mongoose = require('mongoose')
-const Db = process.env.DB_NAME
-const port = process.env.PORT || 4000
-const path = require('path')
+const port = process.env.PORT || 8080
+const path = require('path');
 
-mongoose
-  .connect(Db, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
-    console.log('Connection successful')
-  })
-  .catch(error => console.log('Connection error:', error))
+const userRouter = require('./routers/user')
+const alphabetRouter = require('./routers/alphabets');
 
 app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -28,9 +23,11 @@ app.use(function (req, res, next) {
 })
 
 app.use(express.json())
-app.use(router)
+
+app.use("/auth", userRouter)
+app.use(alphabetRouter)
+
 app.use(express.urlencoded({ extended: false }))
-router.use(cookieParser())
 app.use(bodyParser.json())
 app.use('/src/public', express.static(path.join(__dirname, 'public')))
 
