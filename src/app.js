@@ -4,12 +4,12 @@ require("./db/connection");
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
-const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 8080
 const path = require('path');
 
 const userRouter = require('./routers/user')
-const alphabetRouter = require('./routers/alphabets');
+const alphabetRouter = require('./routers/alphabet');
+const alphabetWordCollectionRouter = require('./routers/alphabetwordcollection');
 
 app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -25,7 +25,9 @@ app.use(function (req, res, next) {
 app.use(express.json())
 
 app.use("/auth", userRouter)
-app.use(alphabetRouter)
+app.use("/alphabet", alphabetRouter)
+app.use("/alphabetWords", alphabetWordCollectionRouter)
+
 
 app.use(express.urlencoded({ extended: false }))
 app.use(bodyParser.json())

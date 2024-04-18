@@ -1,13 +1,9 @@
 const express = require('express')
 const userRouter = new express.Router()
+const userController = require('../controllers/user')
 
-const {
-  socialAuthentication,
-  adminLogin,
-} = require('../controllers/user')
+userRouter.post('/social', userController.socialAuthentication)
 
-userRouter.post('/social', socialAuthentication)
-
-userRouter.post('/admin-login', adminLogin)
+userRouter.post('/admin', userController.adminLogin)
 
 module.exports = userRouter

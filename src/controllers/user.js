@@ -1,10 +1,14 @@
-const { OAuth2Client, JWT } = require('google-auth-library')
+const { JWT } = require('google-auth-library')
 const User = require('../models/users')
 const appleSignin = require('apple-signin-auth')
 const { returnCommonResponse, createJwtToken, verifyGoogleToken } = require('../common/common')
 const { UserReferrence } = require('../common/populateKeyObject')
-const client = new OAuth2Client([process.env.CLIENT_ID])
 
+/**
+ * Social Authentication
+ * @param {*} req 
+ * @param {*} res 
+ */
 const socialAuthentication = async (req, res) => {
   if (req.body.social_type == 1) {
     googleAuthentication(req, res)
@@ -15,13 +19,16 @@ const socialAuthentication = async (req, res) => {
   }
 }
 
+/**
+ * Login and Register with Google
+ * @param {*} req 
+ * @param {*} res 
+ */
 const googleAuthentication = async (req, res) => {
   try {
     verifyGoogleToken(req.body.social_token)
       .then(async (data) => {
         const result = await User.findOne({ email: data.email }, UserReferrence.keys);
-        console.log("new id token1:", data, result);
-
         if (result == null || result == undefined) {
           const user = new User({
             email: data.email,
@@ -55,6 +62,12 @@ const googleAuthentication = async (req, res) => {
   }
 }
 
+/**
+ * Login and Register with Apple
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const appleAuthentication = async (req, res) => {
   try {
     const data = await appleSignin.verifyIdToken(req.body.idToken, {
@@ -112,36 +125,29 @@ const appleAuthentication = async (req, res) => {
   }
 }
 
-
+/**
+ * Login for Admin
+ * @param {*} req 
+ * @param {*} res 
+ */
 const adminLogin = async (req, res) => {
-  console.log('req login--->', req.body, process.env.ADMIN_PASSWORD)
   try {
     const email = req.body.email
-    const adminFind = await Users.findOne({
+    const admin = await User.findOne({
       email: email,
     }).exec()
-    console.log('adminFind login--->', adminFind)
-
     if (req.body.password !== process.env.ADMIN_PASSWORD) {
-      return res.status(400).json({
-        message: 'Invalid password',
-      })
+      await returnCommonResponse(res, 400, "Invalid password", {})
+    } else if (admin === undefined || admin === null) {
+      await returnCommonResponse(res, 404, "Data not found", {})
+    } else {
+      const token = await createJwtToken({ id: admin._id, roll_type: admin._doc.roll_type });
+      admin._doc.token = token;
+      console.log("new token: ", token);
+      await returnCommonResponse(res, 200, "login successfully", admin)
     }
-    if (adminFind === undefined || adminFind === null) {
-      return res.status(404).json({
-        message: 'Data not found',
-      })
-    }
-    return res.status(200).json({
-      message: 'login successfully',
-      data: { data: adminFind },
-    })
-  } catch (e) {
-    console.log('e-->', e)
-    return res.status(400).json({
-      message: 'invalid login',
-      error: e,
-    })
+  } catch (error) {
+    await returnCommonResponse(res, 400, "invalid login", error)
   }
 }
 

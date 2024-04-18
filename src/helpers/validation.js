@@ -1,6 +1,6 @@
 const { check } = require('express-validator')
 
-exports.alphabetCollectioValidation = [
+exports.alphabetCollection = [
   check('alpha_character').notEmpty().withMessage('Alphabet is required'),
   check('svg_url')
     .custom((value, { req }) => {
@@ -23,8 +23,8 @@ exports.alphabetCollectioValidation = [
     ),
 ]
 
-exports.alphabetDataValidation = [
-  check('name').notEmpty().withMessage('name is required'),
+exports.alphabetCharacter = [
+  check('color_code').notEmpty().withMessage('color_code is required'),
   check('alpha_character')
     .notEmpty()
     .withMessage('alpha_character is required'),

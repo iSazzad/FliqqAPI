@@ -20,34 +20,12 @@ const alphabetSchema = new mongoose.Schema({
       type: String,
     },
   },
-  name: {
+  color_code: {
     type: String,
   },
-  voice_url: {
-    path: {
-      type: String,
-    },
-    originalName: {
-      type: String,
-    },
-    name: {
-      type: String,
-    },
-    destination: {
-      type: String,
-    },
-  },
-  created_date: {
-    type: Date,
-    default: Date.now,
-  },
-  updated_date: {
-    type: Date,
-    default: Date.now,
-  },
+}, {
+  timestamps: true
 })
 
-//we will create new collection
 const Alphabet = new mongoose.model('Alphabet', alphabetSchema)
-
 module.exports = Alphabet
