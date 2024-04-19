@@ -1,5 +1,5 @@
 const Alphabet = require('../models/alphabets')
-const { returnCommonResponse } = require('../common/common')
+const { returnCommonResponse, alphabetList } = require('../common/common')
 const { validationResult } = require('express-validator')
 
 /**
@@ -79,7 +79,7 @@ const updateAlphabetCharacter = async (req, res) => {
 
 const getAlphabetCharacter = async (req, res) => {
   try {
-    const data = await Alphabet.find({}, {})
+    const data = await alphabetList()
     if (data.length > 0) {
       await returnCommonResponse(res, 200, 'Data get successfully', { data: data })
     } else {

@@ -1,17 +1,18 @@
-const SvgModel = require('../models/alphabetwordcollections')
+const AlphabetWordCollection = require('../models/alphabetwordcollections')
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client();
-const multer = require('multer')
+const multer = require('multer');
+const Alphabet = require('../models/alphabets')
 
 /**
- * 
+ * Alphabet List
  * @returns 
  */
-const alphabetsSvgArray = async () => {
+const alphabetList = async () => {
   return new Promise(async function (resolve, reject) {
-    const alphabetArray = await SvgModel.find({}).exec()
+    const alphabetArray = await Alphabet.find({}, {})
 
     if (alphabetArray.length == 0) {
       reject([])
@@ -19,8 +20,7 @@ const alphabetsSvgArray = async () => {
     var arr = []
     await alphabetArray.forEach((element, index) => {
       const newObj = {
-        svg_url: `${element.svg_url.destination}/${element.svg_url.name}`,
-        chara_voice_url: `${element.chara_voice_url.destination}/${element.chara_voice_url.name}`,
+        image_url: `${element.image_url.destination}/${element.image_url.name}`,
         _id: element._id,
         alpha_character: element.alpha_character,
         color_code: element.color_code,
@@ -162,7 +162,7 @@ const fileFilter = (req, file, cb) => {
 }
 
 module.exports = {
-  alphabetsSvgArray,
+  alphabetList,
   returnCommonResponse,
   securePassword,
   comparePassword,

@@ -1,8 +1,8 @@
 const { check } = require('express-validator')
 
 exports.alphabetCollection = [
-  check('alpha_character').notEmpty().withMessage('Alphabet is required'),
-  check('svg_url')
+  check('name').notEmpty().withMessage('Name is required'),
+  check('image_url')
     .custom((value, { req }) => {
       const allowedMimeTypes = [
         'image/jpeg',
@@ -24,8 +24,8 @@ exports.alphabetCollection = [
 ]
 
 exports.alphabetCharacter = [
-  check('color_code').notEmpty().withMessage('color_code is required'),
+  check('color_code').notEmpty().withMessage('Color code is required'),
   check('alpha_character')
     .notEmpty()
-    .withMessage('alpha_character is required'),
+    .withMessage('Alphabet Character is required'),
 ]

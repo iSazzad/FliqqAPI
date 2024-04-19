@@ -12,8 +12,10 @@ const upload = multer({ storage: storageFile, fileFilter: fileFilter })
 
 alphabetWordCollectionRouter.use(cookieParser())
 
-alphabetWordCollectionRouter.post('/add-list', upload.any('file'), validation.alphabetCollection, alphabetWordController.addAlphabets)
+alphabetWordCollectionRouter.post('/add', adminAuth, upload.any('file'), validation.alphabetCollection, alphabetWordController.addAlphabetWord)
 
-alphabetWordCollectionRouter.get('/list', auth, alphabetWordController.alphabetlist)
+alphabetWordCollectionRouter.patch('/update/:id', adminAuth, upload.any('file'), alphabetWordController.updateAlphabetWord)
+
+alphabetWordCollectionRouter.get('', auth, alphabetWordController.alphabetlist)
 
 module.exports = alphabetWordCollectionRouter

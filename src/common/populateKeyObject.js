@@ -15,18 +15,37 @@ const UserReferrence = {
 /**
  * Alphabet Table
  */
-const AlphabetTableKey = 'alpha_character image_url color_code'
-const AlphabetReferrence1 = {
+const AlphabetTableKey = 'alpha_character image_url color_code';
+const AlphabetReferrence = {
     key: AlphabetTableKey,
     keys: {
         createdAt: 0,
         updatedAt: 0,
         __v: 0,
-    }
+    },
+}
+
+/**
+ * Alphabet Words Table
+ */
+const AlphabetWordTableKey = 'alphabet image_url name';
+const AlphabetWordsReferrence = {
+    key: AlphabetWordTableKey,
+    alphabet: {
+        path: 'alphabet',
+        select: AlphabetTableKey,
+        populate: AlphabetReferrence.key
+    },
+    keys: {
+        createdAt: 0,
+        updatedAt: 0,
+        __v: 0,
+    },
 }
 
 
 module.exports = {
     UserReferrence,
-    AlphabetReferrence1
+    AlphabetReferrence,
+    AlphabetWordsReferrence
 };
