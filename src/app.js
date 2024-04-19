@@ -31,7 +31,7 @@ app.use("/alphabetWords", alphabetWordCollectionRouter)
 
 app.use(express.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-app.use('/src/public', express.static(path.join(__dirname, 'src/public')))
+app.use('/src/public', express.static(path.join(__dirname, 'public')))
 
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`)
