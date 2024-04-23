@@ -2,7 +2,7 @@ const { JWT } = require('google-auth-library')
 const User = require('../models/users')
 const appleSignin = require('apple-signin-auth')
 const { returnCommonResponse, createJwtToken, verifyGoogleToken } = require('../common/common')
-const { UserReferrence } = require('../common/populateKeyObject')
+const populateKeys = require('../common/populate.tablekeys')
 
 /**
  * Social Authentication
@@ -28,7 +28,7 @@ const googleAuthentication = async (req, res) => {
   try {
     verifyGoogleToken(req.body.social_token)
       .then(async (data) => {
-        const result = await User.findOne({ email: data.email }, UserReferrence.keys);
+        const result = await User.findOne({ email: data.email }, populateKeys.UserReferrence.key);
         if (result == null || result == undefined) {
           const user = new User({
             email: data.email,

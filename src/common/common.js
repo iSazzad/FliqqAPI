@@ -1,9 +1,7 @@
-const AlphabetWordCollection = require('../models/alphabetwordcollections')
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client();
-const multer = require('multer');
 const Alphabet = require('../models/alphabets')
 
 /**
@@ -20,7 +18,7 @@ const alphabetList = async () => {
     var arr = []
     await alphabetArray.forEach((element, index) => {
       const newObj = {
-        image_url: `${element.image_url.destination}/${element.image_url.name}`,
+        image_url: `${element.image_url.path}`,
         _id: element._id,
         alpha_character: element.alpha_character,
         color_code: element.color_code,
@@ -117,50 +115,6 @@ const verifyGoogleToken = async (token) => {
   });
 };
 
-/**
- * Storage Path Setup 
- */
-const storageFile = multer.diskStorage({
-  destination: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, 'src/public/uploads/alphabet') // Destination folder for images
-    } else if (file.mimetype.startsWith('audio/mpeg')) {
-      cb(null, 'src/public/audios') // Destination folder for MP3 files
-    } else {
-      cb(new Error('Unsupported file type'))
-    }
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9)
-    cb(
-      null,
-      file.fieldname +
-      '-' +
-      uniqueSuffix +
-      '.' +
-      file.originalname.split('.').pop()
-    )
-  },
-})
-
-/**
- * find File filter type 
- * @param {*} req 
- * @param {*} file 
- * @param {*} cb 
- */
-const fileFilter = (req, file, cb) => {
-  file.mimetype === 'image/jpeg' ||
-    file.mimetype === 'image/jpg' ||
-    file.mimetype === 'image/svg+xml' ||
-    file.mimetype === 'image/png' ||
-    file.mimetype === 'image/gif' ||
-    file.mimetype === 'audio/mpeg' ||
-    file.mimetype === 'audio/mp3'
-    ? cb(null, true)
-    : cb(null, false)
-}
-
 module.exports = {
   alphabetList,
   returnCommonResponse,
@@ -169,6 +123,4 @@ module.exports = {
   createJwtToken,
   verifyJwtToken,
   verifyGoogleToken,
-  fileFilter,
-  storageFile,
 }

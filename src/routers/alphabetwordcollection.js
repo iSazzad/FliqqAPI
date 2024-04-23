@@ -2,19 +2,17 @@ const express = require('express')
 const cookieParser = require('cookie-parser')
 const auth = require("../middleware/auth");
 const adminAuth = require("../middleware/admin-auth");
-const multer = require('multer')
+
 const alphabetWordCollectionRouter = new express.Router()
 const alphabetWordController = require('../controllers/alphabetwordcollection')
 const validation = require('../helpers/validation');
-const { storageFile, fileFilter } = require('../common/common');
-
-const upload = multer({ storage: storageFile, fileFilter: fileFilter })
+const { uploadFile } = require('../common/upload.service');
 
 alphabetWordCollectionRouter.use(cookieParser())
 
-alphabetWordCollectionRouter.post('/add', adminAuth, upload.any('file'), validation.alphabetCollection, alphabetWordController.addAlphabetWord)
+alphabetWordCollectionRouter.post('/add', adminAuth, uploadFile.any('file'), validation.alphabetCollection, alphabetWordController.addAlphabetWord)
 
-alphabetWordCollectionRouter.patch('/update/:id', adminAuth, upload.any('file'), alphabetWordController.updateAlphabetWord)
+alphabetWordCollectionRouter.patch('/update/:id', adminAuth, uploadFile.any('file'), alphabetWordController.updateAlphabetWord)
 
 alphabetWordCollectionRouter.get('', auth, alphabetWordController.alphabetlist)
 

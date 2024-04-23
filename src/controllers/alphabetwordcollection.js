@@ -2,26 +2,31 @@ const AlphabetWordCollection = require('../models/alphabetwordcollections')
 
 const { alphabetList, returnCommonResponse } = require('../common/common')
 const { validationResult } = require('express-validator')
+const { uploadOnCloudinary } = require('../common/cloudinary.service')
 
 const addAlphabetWord = async (req, res) => {
   try {
     const body = { alphabet: req.body.alphabet, name: req.body.name }
+
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
       return res.status(403).json({ errors: errors.array() })
     }
-    if (req.files) {
-      req.files.forEach(element => {
-        const { path, originalname, filename, destination } = element
-        const fileData = {
-          path,
-          originalName: originalname,
-          name: filename,
-          destination,
-        }
-        body.image_url = fileData
-      })
+
+    if (req.files && req.files.length > 0) {
+      const item = req.files[0]
+
+      const type = req.body.type ?? null
+      const uploadedImage = await uploadOnCloudinary(item.path, type)
+
+      body['image_url'] = {
+        path: uploadedImage.url,
+        originalName: uploadedImage.original_filename,
+        name: uploadedImage.public_id,
+        destination: uploadedImage.url,
+      }
     }
+
     const dataExist = await AlphabetWordCollection.findOne({ name: req.body.name })
 
     if (!dataExist) {
@@ -44,17 +49,20 @@ const updateAlphabetWord = async (req, res) => {
       bodyObject = { name: req.body.name }
     }
 
-    if (req.files) {
-      req.files.forEach(element => {
-        const { path, originalname, filename, destination } = element
-        const fileData = {
-          path,
-          originalName: originalname,
-          name: filename,
-          destination,
-        }
-        bodyObject = { ...bodyObject, image_url: fileData }
-      })
+    if (req.files && req.files.length > 0) {
+      const item = req.files[0]
+
+      const type = req.body.type ?? null
+      const uploadedImage = await uploadOnCloudinary(item.path, type)
+
+      const url = {
+        path: uploadedImage.url,
+        originalName: uploadedImage.original_filename,
+        name: uploadedImage.public_id,
+        destination: uploadedImage.url,
+      }
+
+      bodyObject = { ...bodyObject, image_url: url }
     }
 
     const updatedAlphabetWord = await AlphabetWordCollection.findByIdAndUpdate(_id, bodyObject, { new: true })
@@ -82,7 +90,7 @@ const alphabetlist = async (req, res) => {
         alphabet: element._id,
       })
       const newDataArr = dataArr.map(element => ({
-        image_url: `${element.image_url.destination}/${element.image_url.name}`,
+        image_url: `${element.image_url.path}`,
         _id: element._id,
         name: element.name,
       }))

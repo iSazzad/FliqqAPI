@@ -1,6 +1,7 @@
 const Alphabet = require('../models/alphabets')
 const { returnCommonResponse, alphabetList } = require('../common/common')
 const { validationResult } = require('express-validator')
+const { uploadOnCloudinary } = require('../common/cloudinary.service')
 
 /**
  * Add New Alphabets Character with its Color Code
@@ -20,11 +21,13 @@ const addAlphabetCharacter = async (req, res) => {
 
     if (req.files && req.files.length > 0) {
       const item = req.files[0]
+      const type = req.body.type ?? null
+      const uploadedImage = await uploadOnCloudinary(item.path, type)
       body['image_url'] = {
-        path: item.path,
-        originalName: item.originalname,
-        name: item.filename,
-        destination: item.destination,
+        path: uploadedImage.url,
+        originalName: uploadedImage.original_filename,
+        name: uploadedImage.public_id,
+        destination: uploadedImage.url,
       }
     }
 
@@ -56,12 +59,17 @@ const updateAlphabetCharacter = async (req, res) => {
 
     if (req.files && req.files.length > 0) {
       const item = req.files[0]
+
+      const type = req.body.type ?? null
+      const uploadedImage = await uploadOnCloudinary(item.path, type)
+
       const url = {
-        path: item.path,
-        originalName: item.originalname,
-        name: item.filename,
-        destination: item.destination,
+        path: uploadedImage.url,
+        originalName: uploadedImage.original_filename,
+        name: uploadedImage.public_id,
+        destination: uploadedImage.url,
       }
+
       bodyObject = { ...bodyObject, image_url: url }
     }
 
