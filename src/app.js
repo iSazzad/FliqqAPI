@@ -10,6 +10,8 @@ const path = require('path');
 const userRouter = require('./routers/user')
 const alphabetRouter = require('./routers/alphabet');
 const alphabetWordCollectionRouter = require('./routers/alphabetwordcollection');
+const numberRouter = require('./routers/number');
+const allTypeWordRouter = require('./routers/alltypeword');
 
 app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -27,7 +29,8 @@ app.use(express.json())
 app.use("/auth", userRouter)
 app.use("/alphabet", alphabetRouter)
 app.use("/alphabetWords", alphabetWordCollectionRouter)
-
+app.use("/number", numberRouter)
+app.use("/alltypeword", allTypeWordRouter)
 
 app.use(express.urlencoded({ extended: false }))
 app.use(bodyParser.json())

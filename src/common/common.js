@@ -2,7 +2,8 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client();
-const Alphabet = require('../models/alphabets')
+const Alphabet = require('../models/alphabets');
+const Number = require("../models/numbers");
 
 /**
  * Alphabet List
@@ -32,6 +33,34 @@ const alphabetList = async () => {
   })
 }
 
+/**
+ * Numbers List
+ * @returns 
+ */
+const numbersList = async () => {
+  return new Promise(async function (resolve, reject) {
+    const numberArray = await Number.find({}, {})
+
+    if (numberArray.length == 0) {
+      reject([])
+    }
+    var arr = []
+    await numberArray.forEach((element, index) => {
+      const newObj = {
+        image_url: `${element.image_url.path}`,
+        _id: element._id,
+        number_character: element.number_character,
+        color_code: element.color_code,
+        name: element.name,
+      }
+      arr.push(newObj)
+
+      if (numberArray.length == index + 1) {
+        resolve(arr)
+      }
+    })
+  })
+}
 /**
  * API Common Response
  * @param {*} res 
@@ -123,4 +152,5 @@ module.exports = {
   createJwtToken,
   verifyJwtToken,
   verifyGoogleToken,
+  numbersList,
 }

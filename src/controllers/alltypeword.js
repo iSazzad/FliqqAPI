@@ -1,20 +1,22 @@
-const Alphabet = require('../models/alphabets')
-const { returnCommonResponse, alphabetList } = require('../common/common')
+const AllTypeWord = require('../models/alltypewords')
+const { returnCommonResponse, numbersList } = require('../common/common')
 const { validationResult } = require('express-validator')
 const { uploadOnCloudinary } = require('../common/cloudinary.service')
+const populateKeys = require('../common/populate.tablekeys')
 
 /**
- * Add New Alphabets Character with its Color Code
+ * Add New AllTypeWord Character with its Color Code
  * @param {*} req 
  * @param {*} res 
  */
-const addAlphabetCharacter = async (req, res) => {
+const addAllTypeWordImage = async (req, res) => {
   try {
     const body = {
-      alpha_character: req.body.alpha_character,
-      color_code: req.body.color_code,
+      content_type: req.body.content_type,
+      name: req.body.name,
     }
-    const errors = validationResult(req)
+
+    const errors = await validationResult(req)
     if (!errors.isEmpty()) {
       await returnCommonResponse(res, 403, 'Empty data', { errors: errors.array() })
     } else {
@@ -30,16 +32,16 @@ const addAlphabetCharacter = async (req, res) => {
         }
       }
 
-      const dataExist = await Alphabet.findOne({
+      const dataExist = await AllTypeWord.findOne({
         $and: [
-          { alpha_character: req.body.alpha_character },
+          { name: req.body.name, content_type: req.body.content_type },
         ],
       })
       if (dataExist) {
         await returnCommonResponse(res, 400, 'This Name Already Exists', {})
       } else {
-        const addingAlphabets = new Alphabet(body)
-        const insertValues = await addingAlphabets.save()
+        const addingData = new AllTypeWord(body)
+        const insertValues = await addingData.save()
         await returnCommonResponse(res, 201, 'Data added successfully', { data: insertValues })
       }
     }
@@ -48,13 +50,17 @@ const addAlphabetCharacter = async (req, res) => {
   }
 }
 
-const updateAlphabetCharacter = async (req, res) => {
+const updateAllTypeWordImage = async (req, res) => {
   try {
     const _id = req.params.id
     let bodyObject
 
-    if (req.body.color_code) {
-      bodyObject = { ...bodyObject, color_code: req.body.color_code }
+    if (req.body.content_type) {
+      bodyObject = { ...bodyObject, content_type: req.body.content_type }
+    }
+
+    if (req.body.name) {
+      bodyObject = { ...bodyObject, name: req.body.name }
     }
 
     if (req.files && req.files.length > 0) {
@@ -73,10 +79,10 @@ const updateAlphabetCharacter = async (req, res) => {
       bodyObject = { ...bodyObject, image_url: url }
     }
 
-    const updatedAlphabet = await Alphabet.findByIdAndUpdate(_id, bodyObject, { new: true })
+    const updatedData = await AllTypeWord.findByIdAndUpdate(_id, bodyObject, { new: true })
 
-    if (updatedAlphabet) {
-      await returnCommonResponse(res, 200, 'Alphabet updated successfully', updatedAlphabet)
+    if (updatedData) {
+      await returnCommonResponse(res, 200, 'Data updated successfully', updatedData)
     } else {
       await returnCommonResponse(res, 404, 'Data not found!', {})
     }
@@ -85,11 +91,12 @@ const updateAlphabetCharacter = async (req, res) => {
   }
 }
 
-const getAlphabetCharacter = async (req, res) => {
+const getAllTypeWordImage = async (req, res) => {
   try {
-    const data = await alphabetList()
-    if (data.length > 0) {
-      await returnCommonResponse(res, 200, 'Data get successfully', { data: data })
+    const dataArray = await AllTypeWord.find({ content_type: req.params.type }, populateKeys.AllTypeWordReferrence.key)
+
+    if (dataArray.length > 0) {
+      await returnCommonResponse(res, 200, 'Data get successfully', { data: dataArray })
     } else {
       await returnCommonResponse(res, 404, 'Data not found', {})
     }
@@ -99,7 +106,7 @@ const getAlphabetCharacter = async (req, res) => {
 }
 
 module.exports = {
-  addAlphabetCharacter,
-  getAlphabetCharacter,
-  updateAlphabetCharacter,
+  addAllTypeWordImage,
+  getAllTypeWordImage,
+  updateAllTypeWordImage,
 }

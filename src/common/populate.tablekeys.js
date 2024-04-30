@@ -43,9 +43,37 @@ const AlphabetWordsReferrence = {
     },
 }
 
+/**
+ * Number Table
+ */
+const NumberTableKey = 'number_character image_url color_code name';
+const NumberReferrence = {
+    key: NumberTableKey,
+    keys: {
+        createdAt: 0,
+        updatedAt: 0,
+        __v: 0,
+    },
+}
+
+/**
+ * AllTypeWord Table
+ */
+const AllTypeWordTableKey = 'content_type image_url name';
+const AllTypeWordReferrence = {
+    key: AllTypeWordTableKey,
+    keys: {
+        createdAt: 0,
+        updatedAt: 0,
+        __v: 0,
+    },
+}
+
 
 module.exports = {
     UserReferrence,
     AlphabetReferrence,
-    AlphabetWordsReferrence
+    AlphabetWordsReferrence,
+    NumberReferrence,
+    AllTypeWordReferrence,
 };

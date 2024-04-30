@@ -1,19 +1,21 @@
-const Alphabet = require('../models/alphabets')
-const { returnCommonResponse, alphabetList } = require('../common/common')
+const Number = require('../models/numbers')
+const { returnCommonResponse, numbersList } = require('../common/common')
 const { validationResult } = require('express-validator')
 const { uploadOnCloudinary } = require('../common/cloudinary.service')
 
 /**
- * Add New Alphabets Character with its Color Code
+ * Add New Numbers Character with its Color Code
  * @param {*} req 
  * @param {*} res 
  */
-const addAlphabetCharacter = async (req, res) => {
+const addNumberCharacter = async (req, res) => {
   try {
     const body = {
-      alpha_character: req.body.alpha_character,
+      number_character: req.body.number_character,
       color_code: req.body.color_code,
+      name: req.body.name,
     }
+
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
       await returnCommonResponse(res, 403, 'Empty data', { errors: errors.array() })
@@ -30,16 +32,16 @@ const addAlphabetCharacter = async (req, res) => {
         }
       }
 
-      const dataExist = await Alphabet.findOne({
+      const dataExist = await Number.findOne({
         $and: [
-          { alpha_character: req.body.alpha_character },
+          { number_character: req.body.number_character },
         ],
       })
       if (dataExist) {
         await returnCommonResponse(res, 400, 'This Name Already Exists', {})
       } else {
-        const addingAlphabets = new Alphabet(body)
-        const insertValues = await addingAlphabets.save()
+        const addingNumbers = new Number(body)
+        const insertValues = await addingNumbers.save()
         await returnCommonResponse(res, 201, 'Data added successfully', { data: insertValues })
       }
     }
@@ -48,13 +50,17 @@ const addAlphabetCharacter = async (req, res) => {
   }
 }
 
-const updateAlphabetCharacter = async (req, res) => {
+const updateNumberCharacter = async (req, res) => {
   try {
     const _id = req.params.id
     let bodyObject
 
     if (req.body.color_code) {
       bodyObject = { ...bodyObject, color_code: req.body.color_code }
+    }
+
+    if (req.body.name) {
+      bodyObject = { ...bodyObject, name: req.body.name }
     }
 
     if (req.files && req.files.length > 0) {
@@ -73,10 +79,10 @@ const updateAlphabetCharacter = async (req, res) => {
       bodyObject = { ...bodyObject, image_url: url }
     }
 
-    const updatedAlphabet = await Alphabet.findByIdAndUpdate(_id, bodyObject, { new: true })
+    const updatedNumber = await Number.findByIdAndUpdate(_id, bodyObject, { new: true })
 
-    if (updatedAlphabet) {
-      await returnCommonResponse(res, 200, 'Alphabet updated successfully', updatedAlphabet)
+    if (updatedNumber) {
+      await returnCommonResponse(res, 200, 'Number updated successfully', updatedNumber)
     } else {
       await returnCommonResponse(res, 404, 'Data not found!', {})
     }
@@ -85,9 +91,9 @@ const updateAlphabetCharacter = async (req, res) => {
   }
 }
 
-const getAlphabetCharacter = async (req, res) => {
+const getNumberCharacter = async (req, res) => {
   try {
-    const data = await alphabetList()
+    const data = await numbersList()
     if (data.length > 0) {
       await returnCommonResponse(res, 200, 'Data get successfully', { data: data })
     } else {
@@ -99,7 +105,7 @@ const getAlphabetCharacter = async (req, res) => {
 }
 
 module.exports = {
-  addAlphabetCharacter,
-  getAlphabetCharacter,
-  updateAlphabetCharacter,
+  addNumberCharacter,
+  getNumberCharacter,
+  updateNumberCharacter,
 }

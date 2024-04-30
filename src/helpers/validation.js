@@ -29,3 +29,17 @@ exports.alphabetCharacter = [
     .notEmpty()
     .withMessage('Alphabet Character is required'),
 ]
+
+exports.numberCharacter = [
+  check('color_code').notEmpty().withMessage('Color code is required'),
+  check('name').notEmpty().withMessage('Name is required'),
+  check('number_character')
+    .notEmpty()
+    .withMessage('Number Character is required'),
+]
+
+exports.allTypeWord = [
+  check('content_type').notEmpty().withMessage('content type is required'),
+  check('name').notEmpty().withMessage('Name is required'),
+]
+

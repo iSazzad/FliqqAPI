@@ -9,7 +9,7 @@ const storage = multer.diskStorage({});
 const storageFile = multer.diskStorage({
     destination: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
-            cb(null, 'src/public/uploads/alphabet') // Destination folder for images
+            cb(null, 'src/public/uploads') // Destination folder for images
         } else if (file.mimetype.startsWith('audio/mpeg')) {
             cb(null, 'src/public/audios') // Destination folder for MP3 files
         } else {

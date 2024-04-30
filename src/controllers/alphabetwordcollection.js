@@ -11,29 +11,29 @@ const addAlphabetWord = async (req, res) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
       return res.status(403).json({ errors: errors.array() })
-    }
-
-    if (req.files && req.files.length > 0) {
-      const item = req.files[0]
-
-      const type = req.body.type ?? null
-      const uploadedImage = await uploadOnCloudinary(item.path, type)
-
-      body['image_url'] = {
-        path: uploadedImage.url,
-        originalName: uploadedImage.original_filename,
-        name: uploadedImage.public_id,
-        destination: uploadedImage.url,
-      }
-    }
-
-    const dataExist = await AlphabetWordCollection.findOne({ name: req.body.name })
-
-    if (!dataExist) {
-      const insertValues = await AlphabetWordCollection.create(body)
-      await returnCommonResponse(res, 200, "Alphabet word added successfully", insertValues)
     } else {
-      await returnCommonResponse(res, 400, "Name already Exist", {})
+      if (req.files && req.files.length > 0) {
+        const item = req.files[0]
+
+        const type = req.body.type ?? null
+        const uploadedImage = await uploadOnCloudinary(item.path, type)
+
+        body['image_url'] = {
+          path: uploadedImage.url,
+          originalName: uploadedImage.original_filename,
+          name: uploadedImage.public_id,
+          destination: uploadedImage.url,
+        }
+      }
+
+      const dataExist = await AlphabetWordCollection.findOne({ name: req.body.name })
+
+      if (!dataExist) {
+        const insertValues = await AlphabetWordCollection.create(body)
+        await returnCommonResponse(res, 200, "Alphabet word added successfully", insertValues)
+      } else {
+        await returnCommonResponse(res, 400, "Name already Exist", {})
+      }
     }
   } catch (error) {
     await returnCommonResponse(res, 500, 'Internal Server Error', error.message)
@@ -46,7 +46,7 @@ const updateAlphabetWord = async (req, res) => {
     let bodyObject
 
     if (req.body.name) {
-      bodyObject = { name: req.body.name }
+      bodyObject = { ...bodyObject, name: req.body.name }
     }
 
     if (req.files && req.files.length > 0) {
